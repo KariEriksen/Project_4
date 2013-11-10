@@ -77,7 +77,7 @@ $$\ddot{X}(x) - kX(x) = 0.$$
 Using the abc-method we find that $X = \pm \sqrt{k}.$
 We use $k = \mu^2$ and get $\sqrt{k} = \mu.$
 \\
-For $\mu^2 \gg 0$ the general solution becomes
+For $\mu^2 > 0$ the general solution becomes
 \\
 $$X(x) = Ae^{\mu x} + Be^{-\mu x}.$$
 \\
@@ -97,7 +97,7 @@ With boundary conditions we get
 $$X(0) = b = 0$$
 $$X(d) = ad = 0 \Rightarrow a = 0.$$
 \\
-The only case of interest is then $k = -\mu^2$, when $-\mu^2 \ll 0$. We get the general solution
+The only case of interest is then $k = -\mu^2$, when $-\mu^2 < 0$. We get the general solution
 \\
 $$X(x) = A\cos(\mu x) + B\sin(\mu x).$$
 \\
@@ -166,18 +166,125 @@ The algorithms for these three methods goes as follows:
 $$u_t \approx \frac{u(x_i,t_j) - u(x_i,t_j - \Delta t)}{\Delta t}$$
 \\
 $$u_{xx} \approx \frac{u(x_i + \Delta x,t_j) - 2u(x_i,t_j) + u(x_i - \Delta x,t_j)}{\Delta x^2}$$
+\\
+If we now define $\alpha = \frac{\Delta t}{\Delta x^2}$, we get the implicit scheme
+\\
+$$ u_{i,j-1} = -\alpha u_{i-1,j} + (1 + 2\alpha)u_{i,j} - \alpha u_{i+1,j}.$$
+\\
+Now this can be written into a tridiagonal matrix system.
+\\
+$$\bf A = \begin{pmatrix}
+1 + 2\alpha & -\alpha & 0 & \cdots & 0 \\
+-\alpha & 1 + 2\alpha & -\alpha & \cdots & 0\\
+0 & -\alpha & 1 + 2\alpha & \cdots & 0\\
+\vdots  & \vdots  & \vdots & \ddots & \vdots  \\
+0 & 0 & 0 & -\alpha & 1 + 2\alpha
+\end{pmatrix}
+$$
+\\
+What we need to solve is 
+\\
+$$\bf A \bf V_j = \bf V_{j-1},$$
+\\
+where $\bf V_j$ is the unknow, and $\bf V_{j-1}$ is our initial vector containing the values from our equation for the stationary-state system, $u_s(x) = 1 - x$. Now this is the same problem as in project 1. Using forward and backward substitution, we can find $\bf V_j$.
 
 \subsubsection*{Forward Euler}
 $$u_t \approx \frac{u(x_i,t_j + \Delta t) - u(x_i,t_j)}{\Delta t}$$
 \\
 $$u_{xx} \approx \frac{u(x_i + \Delta x,t_j) - 2u(x_i,t_j) + u(x_i - \Delta x,t_j)}{\Delta x^2}$$
+\\
+Again we define $\alpha = \frac{\Delta t}{\Delta x^2}$ and get 
+\\
+$$u_{i,j+1} = \alpha u_{i-1,j} + (1 - 2\alpha)u_{i,j} + \alpha u_{i+1,j}.$$
+\\
+$$\bf A = \begin{pmatrix}
+1 - 2\alpha & \alpha & 0 & \cdots & 0 \\
+\alpha & 1 - 2\alpha & \alpha & \cdots & 0\\
+0 & \alpha & 1 - 2\alpha & \cdots & 0\\
+\vdots  & \vdots  & \vdots & \ddots & \vdots  \\
+0 & 0 & 0 & \alpha & 1 - 2\alpha
+\end{pmatrix}
+$$
+\\
+$$\bf A \bf V_j = \bf V_{j+1}$$
+\\
+Forward Euler is much easier than the implicit scheme, now all we need to do is a matrix-vector multiplication, and we find $\bf V_j$.
 
 \subsubsection*{Crank-Nicolson}
 $$u_t \approx \frac{u(x_i,t_j + \Delta t) - u(x_i,t_j)}{\Delta t}$$
 \\
-$$u_{xx} \approx \frac{1}{2} \left(\frac{u(x_i + \Delta x,t_j) - 2u(x_i,t_j) + u(x_i - \Delta x,t_j)}{\Delta x^2} +$$
- 
-$$\frac{u(x_i + \Delta x,t_j + \Delta t) - 2u(x_i,t_j+ \Delta t) + u(x_i - \Delta x,t_j + \Delta t)}{\Delta x^2}\right)$$
+\[
+u_{xx} \approx \frac{1}{2} \left(\frac{u(x_i + \Delta x,t_j) - 2u(x_i,t_j) + u(x_i - \Delta x,t_j)}{\Delta x^2} +\right.
+ \]
+\[
+\left.\frac{u(x_i + \Delta x,t_j + \Delta t) - 2u(x_i,t_j+ \Delta t) + u(x_i - \Delta x,t_j + \Delta t)}{\Delta x^2}\right)
+\]
+
+Using $\alpha$ as previous, we end up with
+\\
+$$-\alpha u_{i-1,j} + (2 + 2\alpha)u_{i,j} - \alpha u{i+1,j} = \alpha u_{i-1,j-1} + (2 - 2\alpha)u_{i,j-1} + \alpha u_{i+1,j-1}.$$
+\\
+This gives 
+\\
+$$(2\bf I - \alpha \bf B) \bf V_{j-1} = \bf V_{j-1},$$
+\\
+and 
+\\
+$$\bf A = \begin{pmatrix}
+2 + 2\alpha & \alpha & 0 & \cdots & 0 \\
+\alpha & 2 + 2\alpha & \alpha & \cdots & 0\\
+0 & \alpha & 2 + 2\alpha & \cdots & 0\\
+\vdots  & \vdots  & \vdots & \ddots & \vdots  \\
+0 & 0 & 0 & \alpha & 2 + 2\alpha
+\end{pmatrix}
+.$$
+\\
+And we can find $\bf V_{j-1}$ by using Gaussian Elimination as we did for Backward Euler.
+\\
+\subsection*{\ }
+Now we have all we need to solve this problem numerically. But there are some things worth knowing about, as we use these methods. Such as what the truncation error we do, or how stable these methods are. This we can find deriving the expressions for the derivatives using Taylor expansion.
+First we look at the explicit scheme and find the new value of $u$ on step forward in time.
+\\
+$$u_{i,j+1} = u(x,t + \Delta t) = u(x,t) +  \Delta t u'(x,t) + \frac{\Delta t^2}{2}u''(x,t)$$
+\\
+$$u_t = u'(x,t)\Delta t = u(x,t + \Delta t - u(x,t) - \frac{\Delta t^2}{2}u''(x,t)$$
+\\
+$$u_t = u'(x,t) = \frac{u(x,t + \Delta t) - u(x,t)}{\Delta t} - \frac{\Delta t}{2}u''(x,t)$$
+\\
+We see that the truncation error goes as $O (\Delta t)$.
+\\
+To find the truncation error for the second derivative of $x$ we must find an expression both for the value on step back in the position-space, and on step forward.
+We get 
+\\
+$$u_{i+1,j} = u(x + \Delta x,t) = u(x,t) + \Delta xu'(x,t) + \frac{\Delta x^2}{2}u''(x,t) + \frac{\Delta x^3}{3!}u'''(x,t) + \frac{\Delta x^4}{4!}u''''(x,t)$$
+\\
+$$u_{i-1,j} = u(x - \Delta x,t) = u(x,t) - \Delta xu'(x,t) + \frac{\Delta x^2}{2}u''(x,t) - \frac{\Delta x^3}{3!}u'''(x,t) + \frac{\Delta x^4}{4!}u''''(x,t)$$
+\\
+To find an expression for the second derivative, we add these to expression togheter.
+\\
+$$u(x + \Delta x,t) + u(x - \Delta x,t) = 2(u(x,t) + \Delta x^2 u''(x,t) + \frac {2}{4!}\Delta x^4u''''(x,t)$$
+\\
+$$u''(x,t) = \frac{u(x + \Delta x,t) - 2u(x,t) + u(x -\Delta x,t)}{\Delta x^2} - \frac{2}{4!}\Delta x^2u''''(x,t)$$
+\\
+And the truncation error goes as $O(\Delta x^2)$.
+This can be shown for the explicit scheme as well, but the Crank-Nicolson goes a bit different.
+\\
+$$u(x,t) = u(x,t + \Delta t/2) - \frac{\partial u(x,t + \Delta t/2)}{\partial t}\frac{\Delta t}{2} + \frac{\partial^2 u(x,t + \Delta t/2)}{2\partial t^2}\Delta t^2 + O(\Delta t^3)$$
+\\
+Then the derivatives become
+\\
+$$\left[ \frac{\partial u(x,t + \Delta t/2)}{\partial t}\right] = \frac{\partial u(x,t + \Delta t/2)}{\partial t} + O(\Delta t^2),$$
+\\
+$$\left[ \frac{\partial^2 u(x,t + \Delta t/2)}{\partial x^2}\right] = \frac{\partial' u(x,t + \Delta t/2)}{\partial x^2} + O(\Delta x^2).$$
+\\
+And the truncation errors are $O(\Delta t^2)$ and $O(\Delta x^2)$.
+Both Backward Euler and Crank-Nicolson are stable for all $\Delta x$ and $\Delta t$, but for Forward Euler, we must demand $\Delta t < \frac{1}{2} \Delta x^2$. Meaning we must have $\alpha < \frac{1}{2}$.
+
+
+
+
+
+
 
 
 
