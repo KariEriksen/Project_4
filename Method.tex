@@ -1,0 +1,304 @@
+\documentclass[a4paper,12pt, english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{babel}
+\usepackage{amsmath}
+\usepackage{ulem}
+\usepackage{a4wide}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{tabularx}
+\usepackage{tabulary}
+
+\begin{document}
+
+\begin{titlepage}
+\begin{center}
+\textsc{\Large Computational Physics, Project 4}\\[0.5cm]
+\textsc{Vilde Eide Skingen, John-Anders Stende and Kari Eriksen}\\[0.5cm]
+
+\end{center}
+\end{titlepage}
+
+\begin{abstract}
+
+simulate how the signals between neurons in the brain 
+
+\end{abstract}
+
+\section*{Diffusion of neruotransmitters in the synaptic cleft}
+
+\subsection*{Method}
+
+In this project we want as mentioned simulate the concentration of a particular neurotransmitter in the synaptic cleft. More specific between the presynaptic membrane and the postsynaptic membrane. \
+In order to compare our simulation, using the three different methods Backward Euler, Forward Euler and the Crank-Nicolson scheme, we need something we know to be an exact solution or a closed form solution. One of our task in this project is to find this solution. Which in this case is on closed form. 
+\\
+We start with the diffusion equation in 1 dimension
+\\
+\begin{equation}
+\frac{\partial u}{\partial t} = D\frac{\partial^2 u}{\partial x^2}.
+\label{eq:diffusion_1d}
+\end{equation}	
+\\
+
+We are given the solution of the steady-state 
+\\
+$$u_s(x) = 1 - x,$$
+\\
+which obeys the boundary conditions for Eq.~(\ref{eq:diffusion_1d}). We therefore do not need to worry about these previous conditions on the solution $u.$ We make a new function
+\\
+$$v(x,t) = u(x,t) - u_s(x)$$ 
+\\
+with boundary conditions $v(0) = v(d) = 0$ and initial condition $v(x,0) = u(x,0) - u_s(x).$ And this function $v(x,t)$ is easier to solve.
+By first solving $v(x,t)$ it is easy to find $u(x,t).$ $u(x,t)$ is simply $v(x,t) + u_s(x)$ where $u_s(x)$ is time-independent, and therefore can just be added after we we know $v.$
+To find $v$ we first use separation of variables. 
+\\
+$$v(x,t) = X(x)T(t)$$
+\\
+$$\frac{\partial v(x,t)}{\partial t} = X(x) \frac{\partial T(t)}{\partial t}$$
+\\
+$$\frac{\partial^2 v(x,t)}{\partial x^2} = T(t) \frac{\partial^2 X(x)}{\partial x^2}$$
+\\
+$$X(x)\dot{T}(t) = T(t)\ddot{X}(x)$$
+\\
+$$\frac{\dot{T}(t)}{T(t)} = \frac{\ddot{X}(x)}{X(x)}$$
+\\
+For this to be true for all $t$ and $x,$ both the rhs and the lhs must be constant.
+\\
+$$\frac{\dot{T}(t)}{T(t)} = k \Rightarrow \dot{T}(t) - kT(t) = 0$$
+\\
+$$\frac{\ddot{X}(x)}{X(x)} = k \Rightarrow \ddot{X}(x) - kX(x) = 0$$
+\\
+First we solve:
+\\
+$$\ddot{X}(x) - kX(x) = 0.$$
+\\
+Using the abc-method we find that $X = \pm \sqrt{k}.$
+We use $k = \mu^2$ and get $\sqrt{k} = \mu.$
+\\
+For $\mu^2 > 0$ the general solution becomes
+\\
+$$X(x) = Ae^{\mu x} + Be^{-\mu x}.$$
+\\
+Using boundary conditions $v(0) = v(d) = 0$ 
+\\
+$$X(0) = Ae^0 + Be^0 = 0$$
+$$\Rightarrow A + B = 0$$ and
+$$X(d) = Ae^{\mu d} + Be^{-\mu d} = 0$$
+$$\Rightarrow A = B = 0.$$
+\\
+This solution is not of interest. We instead look at $k = 0.$ The general solution in this case is
+\\
+$$X(x) = ax + b.$$
+\\
+With boundary conditions we get
+\\
+$$X(0) = b = 0$$
+$$X(d) = ad = 0 \Rightarrow a = 0.$$
+\\
+The only case of interest is then $k = -\mu^2$, when $-\mu^2 < 0$. We get the general solution
+\\
+$$X(x) = A\cos(\mu x) + B\sin(\mu x).$$
+\\
+Boundary conditions give
+\\
+$$X(0) = A\cos(0) + B\sin(0) = A = 0$$
+$$X(d) = B\sin(\mu d) \Rightarrow \sin(\mu d) = 0.$$
+\\
+We know that $\sin$ is zero when $x  = 0, \pi, 2\pi,...$, we therefore need $\mu d = n \pi$. We then get the solution for X,
+\\
+$$X_n(x) = \sum_{n=1}^{\infty} A_n \sin\left(n\frac{\pi}{d} x\right)$$ 
+\\
+which of course is zero in the end points $x = 0$ and $x = d = 1$.
+\\
+\\
+Now we solve:
+\\
+$$\dot{T}(t) - kT(t) = 0.$$
+\\
+We solve for $T$, and get $T = k$. The gereral solution then becomes
+\\
+$$T(t) = Be^{-k2 t} = Be^{-\mu^2 t}.$$
+\\
+Since $\mu d = n \pi$,
+\\
+$$T(t) = Be^{-\left( n \frac{\pi}{d}\right)^2 t}.$$
+\\
+Now we can write out the solution of $v$. 
+\\
+$$v(x,t) = \sum_{n=1}^{\infty}v_n(x,t) =
+\sum_{n=1}^{\infty} B_n e^{-\left( n \frac{\pi}{d}\right)^2 t} A_n \sin\left(n\frac{\pi}{d} x\right)$$
+\\
+$$A_nB_n = C_n$$
+\\
+We use the initial condition 
+\\
+$$v(x,0) = \sum_{n=1}^{\infty} C_n \sin\left(n\frac{\pi}{d} x\right) = f(x) = x -1.$$
+\\
+We recognize $C_n$ as the inverse fourier coefficient to the function $f(x)$.
+Thus we get
+\\
+$$C_n = 2\int_0^1 \mathrm(x - 1)\sin (n\pi x)\,\mathrm{d}x.$$
+\\
+$$\int_0^1 \mathrm x \sin n \pi x\,\mathrm{d}x = \frac{1}{n\pi}$$
+\\
+$$-\int_0^1 \mathrm \sin \pi x\,\mathrm{d}x = \frac{2}{n \pi}$$
+\\
+$$C_n = 2 \left(\frac{1}{n\pi} - \frac{2}{n\pi} \right) = -\frac{2}{n\pi}$$
+\\
+Here we have set $d=1$. Now the final solution becomes
+\\
+$$v(x,t) = \sum_{n=1}^{\infty} C_n e^{-\left( n \pi\right)^2 t} \sin(n \pi x),$$
+$$v(x,t) = -2 \sum_{n=1}^{\infty} \frac{1}{n \pi} e^{-\left( n \pi\right)^2 t} \sin(n \pi x).$$
+\\
+Now it is easy to find  $u$, when it is simply
+\\
+$$u(x,t) = v(x,t) + u_s(x),$$
+\\
+$$u(x,t) = (1 - x) -2 \sum_{n=1}^{\infty} \frac{1}{n \pi} e^{-\left( n \pi\right)^2 t} \sin(n \pi x).$$
+\\
+Now we have the closed form solution to our problem, but we also want to solve it numerically by using three different methods. The implicit Backward-Euler scheme, the explicit Forward-Euler scheme and the implicit Crank-Nicolson scheme. 
+\\
+The algorithms for these three methods goes as follows:
+
+\subsubsection*{Backward Euler}
+$$u_t \approx \frac{u(x_i,t_j) - u(x_i,t_j - \Delta t)}{\Delta t}$$
+\\
+$$u_{xx} \approx \frac{u(x_i + \Delta x,t_j) - 2u(x_i,t_j) + u(x_i - \Delta x,t_j)}{\Delta x^2}$$
+\\
+If we now define $\alpha = \frac{\Delta t}{\Delta x^2}$, we get the implicit scheme
+\\
+$$ u_{i,j-1} = -\alpha u_{i-1,j} + (1 + 2\alpha)u_{i,j} - \alpha u_{i+1,j}.$$
+\\
+Now this can be written into a tridiagonal matrix system.
+\\
+$$\bf A = \begin{pmatrix}
+1 + 2\alpha & -\alpha & 0 & \cdots & 0 \\
+-\alpha & 1 + 2\alpha & -\alpha & \cdots & 0\\
+0 & -\alpha & 1 + 2\alpha & \cdots & 0\\
+\vdots  & \vdots  & \vdots & \ddots & \vdots  \\
+0 & 0 & 0 & -\alpha & 1 + 2\alpha
+\end{pmatrix}
+$$
+\\
+What we need to solve is 
+\\
+$$\bf A \bf V_j = \bf V_{j-1},$$
+\\
+where $\bf V_j$ is the unknow, and $\bf V_{j-1}$ is our initial vector containing the values from our equation for the stationary-state system, $u_s(x) = 1 - x$. Now this is the same problem as in project 1. Using forward and backward substitution, we can find $\bf V_j$.
+
+\subsubsection*{Forward Euler}
+$$u_t \approx \frac{u(x_i,t_j + \Delta t) - u(x_i,t_j)}{\Delta t}$$
+\\
+$$u_{xx} \approx \frac{u(x_i + \Delta x,t_j) - 2u(x_i,t_j) + u(x_i - \Delta x,t_j)}{\Delta x^2}$$
+\\
+Again we define $\alpha = \frac{\Delta t}{\Delta x^2}$ and get 
+\\
+$$u_{i,j+1} = \alpha u_{i-1,j} + (1 - 2\alpha)u_{i,j} + \alpha u_{i+1,j}.$$
+\\
+$$\bf A = \begin{pmatrix}
+1 - 2\alpha & \alpha & 0 & \cdots & 0 \\
+\alpha & 1 - 2\alpha & \alpha & \cdots & 0\\
+0 & \alpha & 1 - 2\alpha & \cdots & 0\\
+\vdots  & \vdots  & \vdots & \ddots & \vdots  \\
+0 & 0 & 0 & \alpha & 1 - 2\alpha
+\end{pmatrix}
+$$
+\\
+$$\bf A \bf V_j = \bf V_{j+1}$$
+\\
+Forward Euler is much easier than the implicit scheme, now all we need to do is a matrix-vector multiplication, and we find $\bf V_j$.
+
+\subsubsection*{Crank-Nicolson}
+$$u_t \approx \frac{u(x_i,t_j + \Delta t) - u(x_i,t_j)}{\Delta t}$$
+\\
+\[
+u_{xx} \approx \frac{1}{2} \left(\frac{u(x_i + \Delta x,t_j) - 2u(x_i,t_j) + u(x_i - \Delta x,t_j)}{\Delta x^2} +\right.
+ \]
+\[
+\left.\frac{u(x_i + \Delta x,t_j + \Delta t) - 2u(x_i,t_j+ \Delta t) + u(x_i - \Delta x,t_j + \Delta t)}{\Delta x^2}\right)
+\]
+
+Using $\alpha$ as previous, we end up with
+\\
+$$-\alpha u_{i-1,j} + (2 + 2\alpha)u_{i,j} - \alpha u{i+1,j} = \alpha u_{i-1,j-1} + (2 - 2\alpha)u_{i,j-1} + \alpha u_{i+1,j-1}.$$
+\\
+This gives 
+\\
+$$(2\bf I - \alpha \bf B) \bf V_{j-1} = \bf V_{j-1},$$
+\\
+and 
+\\
+$$\bf A = \begin{pmatrix}
+2 + 2\alpha & \alpha & 0 & \cdots & 0 \\
+\alpha & 2 + 2\alpha & \alpha & \cdots & 0\\
+0 & \alpha & 2 + 2\alpha & \cdots & 0\\
+\vdots  & \vdots  & \vdots & \ddots & \vdots  \\
+0 & 0 & 0 & \alpha & 2 + 2\alpha
+\end{pmatrix}
+.$$
+\\
+And we can find $\bf V_{j-1}$ by using Gaussian Elimination as we did for Backward Euler.
+\\
+\subsection*{\ }
+Now we have all we need to solve this problem numerically. But there are some things worth knowing about, as we use these methods. Such as what the truncation error we do, or how stable these methods are. This we can find deriving the expressions for the derivatives using Taylor expansion.
+First we look at the explicit scheme and find the new value of $u$ on step forward in time.
+\\
+$$u_{i,j+1} = u(x,t + \Delta t) = u(x,t) +  \Delta t u'(x,t) + \frac{\Delta t^2}{2}u''(x,t)$$
+\\
+$$u_t = u'(x,t)\Delta t = u(x,t + \Delta t - u(x,t) - \frac{\Delta t^2}{2}u''(x,t)$$
+\\
+$$u_t = u'(x,t) = \frac{u(x,t + \Delta t) - u(x,t)}{\Delta t} - \frac{\Delta t}{2}u''(x,t)$$
+\\
+We see that the truncation error goes as $O (\Delta t)$.
+\\
+To find the truncation error for the second derivative of $x$ we must find an expression both for the value on step back in the position-space, and on step forward.
+We get 
+\\
+$$u_{i+1,j} = u(x + \Delta x,t) = u(x,t) + \Delta xu'(x,t) + \frac{\Delta x^2}{2}u''(x,t) + \frac{\Delta x^3}{3!}u'''(x,t) + \frac{\Delta x^4}{4!}u''''(x,t)$$
+\\
+$$u_{i-1,j} = u(x - \Delta x,t) = u(x,t) - \Delta xu'(x,t) + \frac{\Delta x^2}{2}u''(x,t) - \frac{\Delta x^3}{3!}u'''(x,t) + \frac{\Delta x^4}{4!}u''''(x,t)$$
+\\
+To find an expression for the second derivative, we add these to expression togheter.
+\\
+$$u(x + \Delta x,t) + u(x - \Delta x,t) = 2(u(x,t) + \Delta x^2 u''(x,t) + \frac {2}{4!}\Delta x^4u''''(x,t)$$
+\\
+$$u''(x,t) = \frac{u(x + \Delta x,t) - 2u(x,t) + u(x -\Delta x,t)}{\Delta x^2} - \frac{2}{4!}\Delta x^2u''''(x,t)$$
+\\
+And the truncation error goes as $O(\Delta x^2)$.
+This can be shown for the explicit scheme as well, but the Crank-Nicolson goes a bit different.
+\\
+$$u(x,t) = u(x,t + \Delta t/2) - \frac{\partial u(x,t + \Delta t/2)}{\partial t}\frac{\Delta t}{2} + \frac{\partial^2 u(x,t + \Delta t/2)}{2\partial t^2}\Delta t^2 + O(\Delta t^3)$$
+\\
+Then the derivatives become
+\\
+$$\left[ \frac{\partial u(x,t + \Delta t/2)}{\partial t}\right] = \frac{\partial u(x,t + \Delta t/2)}{\partial t} + O(\Delta t^2),$$
+\\
+$$\left[ \frac{\partial^2 u(x,t + \Delta t/2)}{\partial x^2}\right] = \frac{\partial' u(x,t + \Delta t/2)}{\partial x^2} + O(\Delta x^2).$$
+\\
+And the truncation errors are $O(\Delta t^2)$ and $O(\Delta x^2)$.
+Both Backward Euler and Crank-Nicolson are stable for all $\Delta x$ and $\Delta t$, but for Forward Euler, we must demand $\Delta t < \frac{1}{2} \Delta x^2$. Meaning we must have $\alpha < \frac{1}{2}$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}

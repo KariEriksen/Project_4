@@ -1,0 +1,151 @@
+\documentclass[a4paper,12pt, english]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{babel}
+\usepackage{amsmath}
+\usepackage{ulem}
+\usepackage{a4wide}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{tabularx}
+\usepackage{tabulary}
+
+\begin{document}
+
+
+\begin{titlepage}
+\begin{center}
+\textsc{\Large Computational Physics, Project 4}\\[0.5cm]
+\textsc{John-Anders Stende, Vilde Eide Skingen and Kari Eriksen}\\[0.5cm]
+
+\end{center}
+\end{titlepage}
+
+\begin{abstract}
+
+The transport process of signals in the synaptic cleft in the brain is governed by diffusion. This diffusion process can be modeled by simulations, and be described mathematically by the diffusion equation. In this project we will solve the diffusion equation using three different methods for solving differential equations. By imposing initial and boundary conditions to the mathematical expression, the full solution to the diffusion equation can be found in closed form. We will use this analytical solution to test our numerical solutions. 
+
+We want to study the numerical stability of three methods for partial differential equations; the explicit Forward Euler scheme, the implicit Backward Euler and the implicit Crank-Nicolson.
+
+\end{abstract}
+
+\section*{Diffusion of neurotransmitters in the synaptic cleft}
+
+\subsection*{Introduction}
+In this project we wish to model the diffusion of neurotransmitters in the synaptic cleft. 
+The dominant way of transporting signals between nerve cells in the brain is by means of diffusion across the synaptic cleft separating the cell membranes of the two cells. 
+These neurotransmitter molecules are initially inside vesicles located in the pre-synaptic axon terminal. When an action potential reaches the axon terminal, the vesicles release neurotransmitters into the synaptic cleft. These molecules then diffuse toward the post-synaptic membrane and bind to receptors in the membrane. 
+
+\subsection*{Theory}
+
+The transport process in the synaptic cleft is governed by diffusion, and thus we can describe it mathematically by
+
+\begin{equation}
+\frac{\partial u}{\partial t} = D \nabla^2 u,
+\end{equation}
+
+where $u\,$ is the concentration of the particular neurotransmitter, and $D$ is the diffusion coefficient of the neurotransmitter in the solvent in the  synaptic cleft.
+
+The diffusion equation describes the evolution in time of the density $u$ of a quantity. The quantity of interest is the total flux at time $t$ of molecules across the post-synaptic membrane. 
+
+We assume that the neurotransmitter is released roughly equally on the pre-synaptic side and that the synaptic cleft is roughly equally wide across the whole synaptic terminal. Given the large area of the synaptic cleft compared to its width we assume that the neurotransmitter concentration only varies in the direction across the synaptic cleft. We choose this direction to be the $x$-direction. With this choice of coordinate our diffusion equation reduces to 
+
+\begin{equation}
+\frac{\partial u}{\partial t} = D \frac{\partial^2 u}{\partial x^2}.
+\end{equation}\newline  
+
+A synaptic vesicles burst at a time $t = 0$, releasing the neurotransmitters into the cleft. 
+Immediately after the release the concentration profile in the $x$-direction is given by
+
+\begin{equation}
+u(x,t=0) = N \, \delta(x),
+\label{eq:initial_condition}
+\end{equation}
+
+where $N$ is the number of particle released into the synaptic cleft
+per area of membrane.
+
+Diffusion is strongly linked with random walks. To get an idea over the time-dependence of the neurotransmitter concentration at the post-synaptic side, we look at the solution of a "free" random walk. We then assume that there are no obstacles or particle absorbers in either direction. This is a simplification; in the true diffusion process the molecules will, for instance, bump into the pre-synaptic membrane and be absorbed by receptors at the post-synaptic membrane.
+The random walk gives rise to a Gaussian distribution in time and space. We assume that our distribution is given by a normal distribution. The solution of equation $(2)$ with the initial condition in equation $(3)$ is given by
+
+\begin{equation}
+u(x,t) = \frac{N}{\sqrt{4 \pi D t}} e^{-x^2/4Dt}\;\;.
+\label{eq:solution_delta_1D}
+\end{equation}\newline
+The concentration at the postsynaptic side $u(d,t)$
+approaches 0 in the limit $t \rightarrow 0\;$ and
+$t \rightarrow \infty$. 
+
+
+In our mathematical model we will give the following boundary and initial conditions to approach the situation
+
+\begin{equation}
+u(x=0,t>0) = u_0, \;\;u(x=d,\mbox{all $t$})=0,
+\;\;u(0 < x < d,t < 0) = 0 \;\;.
+\label{eq:initial_conditions_2}
+\end{equation}
+
+We will set $d=1$. 
+Thus there are no neurotransmitters in the synaptic cleft when $t<0$, for $t>0$ the concentration at the pre-synaptic boundary of the synaptic cleft is kept fixed at $u = u_0 = 1$, and that the post-synaptic receptors immediately absorb nearby neurotransmitters so that $u=0$ at the post-synaptic side of the cleft. 
+
+We are thus looking at a one-dimensional problem 
+\[
+ \frac{\partial^2 u(x,t)}{\partial x^2} =\frac{\partial u(x,t)}{\partial t}, t> 0, x\in [0,d]
+\]
+or 
+\[
+u_{xx} = u_t,
+\]
+with initial conditions, i.e., the conditions at $t=0$, 
+\[
+u(x,0)= 0 \hspace{0.5cm} 0 < x < d
+\]
+with $d=1$ the length of the $x$-region of interest. The 
+boundary conditions are 
+\[
+u(0,t)= 1 \hspace{0.5cm} t > 0,
+\]
+and 
+\[
+u(d,t)= 0 \hspace{0.5cm} t > 0.
+\]
+
+We will solve the partial differential equation by
+\begin{enumerate}
+\item The explicit forward Euler algorithm
+ \[
+u_t\approx \frac{u(x_i,t_j+\Delta t)-u(x_i,t_j)}{\Delta t}
+\]
+and
+
+\[
+u_{xx}\approx \frac{u(x_i+\Delta x,t_j)-2u(x_i,t_j)+u(x_i-\Delta x,t_j)}{\Delta x^2}.
+\]
+\item The implicit Backward Euler with
+ \[
+u_t\approx \frac{u(x_i,t_j)-u(x_i,t_j-\Delta t)}{\Delta t}
+\]
+and
+\[
+u_{xx}\approx \frac{u(x_i+\Delta x,t_j)-2u(x_i,t_j)+u(x_i-\Delta x,t_j)}{\Delta x^2},
+\]
+\item Finally the implicit Crank-Nicolson scheme with 
+a time-centered scheme at $(x,t+\Delta t/2)$
+ \[
+u_t\approx \frac{u(x_i,t_j+\Delta t)-u(x_i,t_j)}{\Delta t}.
+\]
+With the corresponding spatial second-order derivative
+\[
+u_{xx}\approx \frac{1}{2}\left(\frac{u(x_i+\Delta x,t_j)-2u(x_i,t_j)+u(x_i-\Delta x,t_j)}{\Delta x^2}+\right.
+\]
+\[
+\left. \frac{u(x_i+\Delta x,t_j+\Delta t)-2u(x_i,t_j+\Delta t)+u(x_i-\Delta x,t_j+\Delta t)}{\Delta x^2}
+\right).
+\] 
+
+\end{enumerate}
+
+ 
+
+\end{document}  
